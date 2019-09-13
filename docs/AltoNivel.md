@@ -1,42 +1,42 @@
-# Descripción del Problema
+# Deskripsi Masalah
 
-Tenemos una aplicación SpringBoot + MySQL. Queremos tener una aplicación en producción y otra en QA.
+Kami memiliki aplikasi SpringBoot + MySQL. Kami ingin memiliki aplikasi dalam produksi dan yang lain di QA.
 
-## Requisitos
+## Requirement
 
-1. Test unitarios.
-2. Test end to end.
-3. Entorno de QA.
-4. Entorno de producción.
-5. Poder pasar a producción rápidamente.
-6. Poder cambiar a cuaquier versión rápidamente.
+1. Unit testing.
+2. Tes end to end.
+3. env QA.
+4. env produksi.
+5. delivery to production dengan cepat.
+6. Mampu mengubah ke versi apa pun dengan cepat.
 
-## Estructura del Repositorio
+## Struktur Repositori
 
-- docker: Código para construir las imágenes Docker.
-- helm: Plantillas para el gestor de paquetes de Kubernetes Helm.
-- k8s: Manifiestos para Kubernetes.
-- src: Código fuente.
-- tools: Scripts útiles para el proceso de desarrollo.
+- docker: dockerfile
+- helm: Template untuk manajer paket Helm Kubernetes.
+- k8s: Manifes untuk Kubernetes.
+- src: repository.
+- tools: Skrip yang berguna untuk proses pengembangan.
 
 ## Docker
 
-Construimos dos imágenes Docker. Una con la aplicación en sí y otra con las herramientas para ejecutar los tests end to end (e2e).
+We build two Docker images. One with the application itself and one with the tools to run the tests end to end (e2e).
 
-Contamos con un Docker Registry privado en AWS para subir las imágenes Docker. 
+We have a private Docker Registry on AWS to upload Docker images.
 
 ## Helm
 
-En Helm hemos creado los Charts para desplegar la aplicación. La plantilla está parametrizada de forma que podamos elegir qué versión de la aplicación desplegar.
+In Helm we have created the Charts to deploy the application. The template is parameterized so that we can choose which version of the application to deploy.
 
 ## K8s
 
-Hemos escrito dos manifiestos para el entorno de test/qa y otro para producción. La diferencia radica en que el entorno de producción configura persistencia para la base de datos.
+We have written two manifests for the test / qa environment and another for production. The difference is that the production environment configures persistence for the database.
 
 ## src
 
-Como decimos este directorio contiene el código fuente del proyecto Maven.
+As we say this directory contains the source code of the Maven project.
 
 ## Tools
 
-Scripts utiles, de momento uno que hace loop hasta que la aplicación está lista.
+Useful scripts, for the moment one that loops until the application is ready.
