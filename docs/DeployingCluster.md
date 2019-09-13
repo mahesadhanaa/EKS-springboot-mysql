@@ -1,18 +1,18 @@
-# Despliegue del cluster
+# Cluster deployment
 
-Vamos a desplegar el cluster Kubernetes usando Amazon Elastic Container Service for Kubernetes (EKS). Para ello necesitamos previamente una cuenta de AWS.
+We will deploy the Kubernetes cluster using Amazon Elastic Container Service for Kubernetes (EKS). For this we need an AWS account.
 
-Vamos a usar Amazon CLI para ir provisionando el Cluster, para instalarlo seguir la documentación:
+We will use Amazon CLI to provision the Cluster, to install it follow the documentation:
 
 https://docs.aws.amazon.com/es_es/cli/latest/userguide/installing.html
 
-## Datos de entrada
+## Input data
 
-Nombre del cluster: Fortypersona
+Cluster Name: Fortypersona
 
-## Creación del rol
+## Role creation
 
-Necesitamos un rol de AWS con capacidad para crear recursos.
+We need an AWS role with the ability to create resources.
 
 ```
 cat >policy.json<<EOF
@@ -96,9 +96,9 @@ EOF
 
 `$ aws iam create-role --role-name KubernetesRole --assume-role-policy-document file:///PATH/TO/policy.json`
 
-## Crear la VPC
+## Create the VPC
 
-Vamos a configurar un Virtual Private Cloud para Kubernetes. Esto no dara más aislamiento en los contenedores.
+We will configure a Virtual Private Cloud for Kubernetes. This will not give more insulation in the containers.
 
 ```
 $ cat >parameters.json<<EOF
@@ -119,9 +119,9 @@ $ aws cloudformation create-stack \
   --disable-rollback
 ```
 
-## Crear el Master del cluster
+## Create the Cluster Master
 
-Ahora que tenemos la red y el rol configurados podemos crear el master del clúster, es la máquina que controlará el cluster, sustituir los valores por los adecuados en cada caso.
+Now that we have the network and the role configured we can create the master of the cluster, it is the machine that will control the cluster, replace the values ​​with the appropriate ones in each case.
 
 ```
 $ aws eks create-cluster \
@@ -130,21 +130,21 @@ $ aws eks create-cluster \
   --resources-vpc-config subnetIds=subnet-08415098923def71a,subnet-0d5fc19ee2f96d6f1,subnet-0e5a5155f2406e49d
 ```
 
-## Conectar nuestro _kubectl_ al cluster
+## Connect our _kubectl_ to the cluster
 
-Para poder autenticar contra el cluster tenemos que seguir estos pasos:
+In order to authenticate against the cluster we have to follow these steps:
 
 https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html#eks-configure-kubectl
 
-Una vez hemos resuelto las dependencias podemos ejecutar:
+Once we have resolved the dependencies we can execute:
 
 `$ aws eks update-kubeconfig --name Fortypersona`
 
-## Crear los nodos del cluster
+## Create cluster nodes
 
-Los nodos del cluster se crean usando una plantilla de CloudFormation que configura un grupo de escalabilidad. Es decir, nos facilita la creación de un cluster dinámico que puede escalar aunque de momento solo escala manualmente. Se inicia con un solo modo, si se desean más nodos, ajustar el parámetro `NodeAutoScalingGroupMaxSize`.
+Cluster nodes are created using a CloudFormation template that configures a scalability group. That is to say, it facilitates the creation of a dynamic cluster that can scale although for the moment it only scales manually. It starts with a single mode, if more nodes are desired, set the `NodeAutoScalingGroupMaxSize` parameter.
 
-Creamos el fichero con los parámetros:
+We create the file with the parameters:
 
 ```
 $ cat >parameters.json <<EOF
@@ -165,7 +165,7 @@ $ cat >parameters.json <<EOF
 EOF
 ```
 
-Y creamos el grupo de escalabilidad
+And we create the scalability group
 
 ```
 $ aws cloudformation create-stack \
@@ -176,13 +176,13 @@ $ aws cloudformation create-stack \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
 ```
 
-Para permitir que los nodos se unan al cluster de Kubernetes:
+To allow the nodes to join the Kubernetes cluster:
 
-Tomamos el varlor de ARN que ha generado el CloudFormation:
+We take the RNA varlor that has generated the CloudFormation:
 
 `$ ARN_ROLE=$(aws cloudformation describe-stacks --stack-name Fortypersona | jq --raw-output ' .Stacks[] | .Outputs[] | select(.OutputKey | contains("NodeInstanceRole")) | .OutputValue' )`
 
-y generamos un Config Map:
+and we generate a Config Map:
 
 ```
 $ cat >aws-auth-cm.yaml<<EOF
