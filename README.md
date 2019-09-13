@@ -6,7 +6,7 @@ Dan Juga cara running dengan CI / CD dengan Jenkins di Kubernetes.
 
 ## Contenido
 
-* [Descripción de alto nivel](docs/AltoNivel.md)
+* [Deskripsi tingkat tinggi](docs/AltoNivel.md)
 * [Deploy cluster EKS](docs/DeployingCluster.md)
 * [Deploy management aplikasi Helm kubernetes](docs/DeployingHelm.md)
 * [Deploy Jenkins di Kubernetes dengan Helm](docs/DeployingJenkins.md)
