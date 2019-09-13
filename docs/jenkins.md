@@ -1,18 +1,18 @@
 # Jenkins
 
-## Credenciales
+## Credentials
 
-Debemos almacenar tres credenciales:
+We must store three credentials:
 
-1. Las credenciales de AWS para acceder al registry privado.
-2. Un token de GitHub para registrar los hooks en el repositorio.
-3. Una cuenta para kubernetes.
+1. AWS credentials to access the private registry.
+2. A GitHub token to register the hooks in the repository.
+3. An account for kubernetes.
 
-## Configuración general
+## General configuration
 
-Tenemos que configurar un servidor de Git donde registrar los hooks del repositorio. Usaremos el token que hemos configurado en credenciales.
+We have to configure a Git server to register the repository hooks. We will use the token that we have configured in credentials.
 
-Hemos configurado variables de entorno para que sea más transversal hacer cambios de configuración, son las siguientes:
+We have configured environment variables to make it more transversal to make configuration changes, they are the following:
 
 | Variable | Valor | Descripción |
 | -------- | ----- | ----------- |
@@ -22,92 +22,92 @@ Hemos configurado variables de entorno para que sea más transversal hacer cambi
 
 ## Jobs
 
-Hemos creado Pipelines para resolver las tareas del ciclo de integración continua.
+We have created Pipelines to solve the tasks of the continuous integration cycle.
 
-Pero en primer lugar describimos el método de trabajo, al tratarse de Kubernetes lo que creamos es un pod con los contiene los contenedores que vamos a usar durante el pipeline. También definimos las variables de entorno y los volumenes que mapeamos dentro de los contenedores.
+But first we describe the method of work, being Kubernetes what we create is a pod with them containing the containers that we will use during the pipeline. We also define the environment variables and the volumes we map within the containers.
 
-Igualmente, al tratarse de Kubernetes, no tenemos workers al estilo tradicional, por lo que generamos uno en cada ejecución del pipeline y lo nombramos con un nombre aleatorio para evitar colisiones.
+Likewise, being Kubernetes, we do not have workers in the traditional style, so we generate one in each execution of the pipeline and name it with a random name to avoid collisions.
 
 * Big_pipeline_test
 
-La definición del pipeline se encuentra en `jenkinsfile_pre.groovy`
+The definition of the pipeline is found in `jenkinsfile_pre.groovy`
 
-En este pipeline hacemos la integración continua. Vamos a ir describiendo cada stage.
+In this pipeline we make continuous integration. We will describe each stage.
 
-Los pasos a seguir:
+The steps to follow:
 
-1. Clonar el repo.
-2. Construir el paquete.
-3. Ejecutar test unitarios.
-4. Construir la imagen Docker de desarrollo que se etiquetará con el commit id del último push, la etiqueta de qa y con la etiqueta de latest.
-5. Limpiamos las imagenes de Docker de tipo _dangling_ que son imagenes sin etiqueta y que acaban ocupando mucho espacio en disco.
-6. Se suben las tres imagenes Docker al registry privado.
-7. Se actualiza el manifest de Kubernetes con la imagen docker de desarrollo que hemos creado.
-8. Se despliega la aplicación de dev usando el manifest de kubernetes.
-9. Esperamos que la aplicación esté arriba y corriendo.
-10. Lanzamos el test e2e.
-11. Si hasta aquí está todo bien, eliminamos la aplicación que hemos desplegado en desarrollo.
-12. Actualizamos el manifest de Kubernetes con el tag de QA.
-13. Desplegamos el entorno de QA. Este entorno se quedara desplegado en la infraestructura.
+1. Clone the repo.
+2. Build the package.
+3. Run unit tests.
+4. Build the development Docker image that will be tagged with the commit id of the last push, the qa tag and the latest tag.
+5. We clean the images of Docker type _dangling_ that are images without label and that end up taking up a lot of disk space.
+6. The three Docker images are uploaded to the private registry.
+7. The Kubernetes manifesto is updated with the development docker image we have created.
+8. The dev application is deployed using the kubernetes manifest.
+9. We hope the application is up and running.
+10. We launched the e2e test.
+11. If everything is fine so far, we remove the application that we have deployed in development.
+12. We update the Kubernetes manifesto with the QA tag.
+13. We deploy the QA environment. This environment will be deployed in the infrastructure.
 
 * Big_pipeline_release
 
-La definición del pipeline se encuentra en `jenkinsfile_release.groovy`
+The definition of the pipeline is found in `jenkinsfile_release.groovy`
 
-La release se hace a mano estableciendo el valor del tag de release y conociendo el tag de commit id que va a ser promocionado a release.
+The release is done by hand by setting the value of the release tag and knowing the commit id tag that is going to be promoted to release.
 
-En esta ocasión los pasos son:
+On this occasion the steps are:
 
-1. Clonar el repo.
-2. Tagear la imagen de dev como release.
-3. Limpiar las imagenes docker dangling.
-4. Empujar la imagen al repositorio.
-5. Actualizar el manifiesto de Kubernetes.
-6. Desplegar la aplicación.
+1. Clone the repo.
+2. Swallow the dev image as release.
+3. Clean the docker dangling images.
+4. Push the image to the repository.
+5. Update the Kubernetes manifesto.
+6. Deploy the application.
 
 * Build_e2e_container
 
-La definición del pipeline se encuentra en `jenkinsfile_build_e2e_docker_image.groovy`
+The definition of the pipeline is found in `jenkinsfile_build_e2e_docker_image.groovy`
 
-Este job construye una imagen Docker para testar nuestra aplicación. Este job se ejecuta manualmente, por lo que el tag de la imagen Docker se necesita como parámetro de entrada.
+This job builds a Docker image to test our application. This job is executed manually, so the Docker image tag is needed as an input parameter.
 
-La imagen contiene, entre otros, un navegador, Maven y Java
+The image contains, among others, a browser, Maven and Java
 
-Los pasos de este job son sencillos,
+The steps in this job are simple,
 
-1. Clonar el repo.
-2. Construir la imagen.
-3. Limpiar las imagenes docker dangling.
-4. Empujar al repositorio.
+1. Clone the repo.
+2. Build the image.
+3. Clean the docker dangling images.
+4. Push to repository.
 
 * change_release
 
-La definición del pipeline se encuentra en `jenkinsfile_set_release.groovy`
+The definition of the pipeline is found in `jenkinsfile_set_release.groovy`
 
-Este job sirve en el supuesto de encontrar un problema con la release que está desplegada y queremos cambiar la versión. Básicamente es un estracto de los jobs de release y test en los que etiquetamos el manifiesto con la versión que queremos desplegar en estos momentos.
+This job serves in the case of finding a problem with the release that is deployed and we want to change the version. Basically it is an excerpt from the release and test jobs in which we label the manifest with the version we want to deploy at the moment.
 
-Así los pasos son:
+So the steps are:
 
-1. Clonar el repo.
-2. Actualizar el tag del manifiesto.
-3. Actualizar el despliegue.
+1. Clone the repo.
+2. Update the manifest tag.
+3. Update the deployment.
 
 * Helm_Pre
 
-Hemos escrito un chart para trabajar con Helm. El Chart depende de MySQL por lo que la plantilla para la base de datos se incluye dentro del directorio charts.
+We have written a chart to work with Helm. The Chart depends on MySQL, so the template for the database is included in the charts directory.
 
-En el pipeline nos hemos basado en el anterior de _pre_ y hemos sustituido los stages donde usamos Kubernetes por los que usamos Helm. También hemos usando un nuevo contenedor que incluye tanto _kubectl_ como _helm_.
+In the pipeline we have based on the previous one of _pre_ and we have replaced the stages where we use Kubernetes with those we use Helm. We have also used a new container that includes both _kubectl_ and _helm_.
 
-En el Chart hemos dejado parametrizado el tag de la imagen docker que vamos a usar, la persistencia (no en dev y qa, si en prod) y el Service Type, lo dejamos como cluster IP para dev y en LoadBalancer para qa y prod.
+In the Chart we have parameterized the tag of the docker image that we are going to use, the persistence (not in dev and qa, if in prod) and the Service Type, we leave it as an IP cluster for dev and in LoadBalancer for qa and prod.
 
-El desplegar con Helm tiene la peculiaridad de que se hace de forma distinta si ya existe un deployment previo por lo que hemos escrito la casuistica y comprobamos si existe o no para actuar en consecuencia.
+The deployment with Helm has the peculiarity that it is done differently if there is already a previous deployment so we have written the casuistry and check if it exists or not to act accordingly.
 
 * Helm_Release
 
-Si queremos hacer la release con Helm también nos hemos basado en el pipeline con Kubernetes.
+If we want to release with Helm we have also based on the pipeline with Kubernetes.
 
-Hemos añadido el contenedor con _kubectl_ y _helm_ para poder operar contra el cluster Kubernetes.
+We have added the container with _kubectl_ and _helm_ to be able to operate against the Kubernetes cluster.
 
-También se taggea la imagen que queremos promocionar a producción y se sube a desarrollo.
+The image we want to promote to production is also tagged and uploaded to development.
 
-**Nota**: Para que funcione debe existir un despliegue previo de la aplicación.
+** Note **: For it to work, there must be a prior deployment of the application.
