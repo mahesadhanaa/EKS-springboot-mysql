@@ -1,14 +1,14 @@
 # Kubernetes
 
-En este directorio disponemos de los ficheros propios de configuración de Kubernetes.
+In this directory we have our own Kubernetes configuration files.
 
 ## Persistent volume
 
-Primero debemos crear un volumen en AWS EBS para almacenar los datos de Jenkins.
+First we must create a volume in AWS EBS to store Jenkins data.
 
 https://docs.aws.amazon.com/es_es/AWSEC2/latest/UserGuide/ebs-creating-volume.html
 
-Anote el Volume ID del volumen que acaba de crear para rellenar el manifiesto de Kubernetes. Configure igualmente el tamaño del volumen, por ejemplo
+Write down the Volume ID of the volume you just created to fill in the Kubernetes manifest. Also configure the volume size, for example
 
 ```
 ...
@@ -16,13 +16,13 @@ storage: 50Gi
 ...
 ```
 
-Cree el recurso
+Create the resource
 
 `$ kubectl create -f jenkins-pv.yaml`
 
 ## Persistent volume claim
 
-Configure aquí el mismo tamaño que hemos dado al Persistent Volume
+Set here the same size we have given to the Persistent Volume
 
 ```
 ...
@@ -30,16 +30,16 @@ storage: 50Gi
 ...
 ```
 
-y cree el recurso 
+and create the resource 
 
 `$ kubectl create -f jenkins-pvc.yaml`
 
 ## Storage class
 
-Usamos **Storage class** para provisionar de persistencia nuestra aplicación. Cuando configuramos el manifiesto o la plantilla Helm, podemos indicar que use persistencia de esta clase de almacenamiento así de forma que cada vez que solicitemos persistencia, se creará un volumen automáticamente en AWS y se acoplará al contenedor correspondiente.
+We use ** Storage class ** to provision our application for persistence. When we configure the manifest or the Helm template, we can indicate that it uses persistence of this kind of storage so that whenever we request persistence, a volume will be created automatically in AWS and attached to the corresponding container.
 
-Hemos llamado a la clase _aws_ebs_. Si cambia el nombre, recuerde actualizar las plantillas que hacen referencia a esta clase.
+We have called the class _aws_ebs_. If you change the name, remember to update the templates that refer to this class.
 
 ## Jenkins values
 
-En el fichero _jenkins_values.yaml_ está la configuración para desplegar Jenkins con una plantilla de Helm.
+In the file _jenkins_values.yaml_ is the configuration to deploy Jenkins with a Helm template.
